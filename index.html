@@ -2,104 +2,75 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Raccoon Thieves</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            background-color: #0d0d12; /* Sfondo scuro */
-            color: white;
-            font-family: sans-serif;
+            /* Imposta l'immagine come sfondo a tutto schermo */
+            background-image: url('intro_bg.png');
+            background-size: cover;   /* Copre tutto lo spazio disponibile */
+            background-position: center; /* Centra l'immagine */
+            background-repeat: no-repeat;
+            
             margin: 0;
             padding: 0;
+            height: 100vh; /* Altezza 100% della finestra */
+            width: 100vw;
+            overflow: hidden; /* Niente scroll */
+
+            /* Flexbox per centrare il bottone perfettamente */
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            justify-content: center; /* Centro orizzontale */
+            align-items: center;     /* Centro verticale */
+            font-family: sans-serif;
         }
 
-        /* L'immagine di copertina */
-        .hero-image {
-            width: 100%;
-            height: 50%;
-            background-image: url('intro_bg.png'); /* Deve chiamarsi così */
-            background-size: cover;
-            background-position: center;
-            border-bottom: 4px solid #ad00ff; /* Bordo neon viola */
-            box-shadow: 0 0 20px #ad00ff;
-        }
-
-        .container {
-            padding: 20px;
-            text-align: center;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        h1 {
-            font-size: 28px;
-            text-transform: uppercase;
-            margin: 10px 0;
-            background: -webkit-linear-gradient(#00ff9d, #00b8ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 900;
-        }
-
-        p {
-            color: #aaa;
-            font-size: 14px;
-            margin-bottom: 30px;
-        }
-
-        /* I Bottoni Fighi */
-        .btn {
+        /* Stile del bottone PLAY centrale */
+        .btn-play {
             background: linear-gradient(90deg, #ad00ff, #6b00ff);
-            border: none;
-            padding: 15px 30px;
-            width: 80%;
-            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 20px 60px;
+            border-radius: 50px; /* Bordi molto arrotondati */
             color: white;
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 32px; /* Testo grande */
+            font-weight: 900; /* Testo molto grassetto */
+            text-transform: uppercase;
             cursor: pointer;
-            margin: 10px 0;
-            box-shadow: 0 4px 15px rgba(173, 0, 255, 0.4);
-            transition: transform 0.1s;
+            
+            /* Effetto Neon/Glow */
+            box-shadow: 0 0 20px #ad00ff, 0 0 40px rgba(173, 0, 255, 0.6);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
         }
 
-        .btn:active {
-            transform: scale(0.95);
+        /* Effetto quando premi il bottone */
+        .btn-play:active {
+            transform: scale(0.95); /* Si rimpicciolisce leggermente */
+            box-shadow: 0 0 10px #ad00ff; /* Il glow diminuisce un po' */
         }
 
-        .btn-secondary {
-            background: #1f1f2e;
-            box-shadow: none;
-            border: 1px solid #333;
-        }
     </style>
 </head>
 <body>
 
-    <div class="hero-image"></div>
-
-    <div class="container">
-        <h1>TON HEIST</h1>
-        <p>Scegli la tua fazione e domina la città.</p>
-
-        <button class="btn" onclick="scegliFazione('ladri')">🦝 Join Raccoons</button>
-        <button class="btn btn-secondary" onclick="scegliFazione('guardie')">👮 Join Police</button>
-    </div>
+    <button class="btn-play" onclick="startGame()">PLAY</button>
 
     <script>
         // Inizializza la WebApp di Telegram
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Espande a tutto schermo
+        tg.expand(); // Espande a tutto schermo appena aperto
 
-        function scegliFazione(fazione) {
-            // Qui inviamo i dati indietro al bot Python!
-            tg.sendData(fazione); 
+        function startGame() {
+            // Vibrazione di feedback (opzionale, ma figo)
+            if(tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('heavy');
+            }
+
+            // Invia il segnale "play_game" al bot Python
+            // Il bot dovrà gestire questo messaggio per mandare la scena successiva
+            tg.sendData("play_game"); 
         }
     </script>
 </body>
