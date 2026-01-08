@@ -145,7 +145,158 @@
         <div class="content-area">
             
             <div id="view-covo" class="view active-view">
+                
+                <div class="hud-top">
+                    <div class="stat-box money-box">
+                        💰 <span id="user-money">0</span> $RAC
+                    </div>
+                    <div class="stat-box level-box">
+                        ⭐ Liv. 1
+                    </div>
                 </div>
+
+                <div class="character-stage">
+                    <img src="raccoo_char.png" 
+                         alt="Raccoon" 
+                         class="char-img" 
+                         id="hero-char"
+                         onclick="tapCharacter()">
+                         
+                    <div class="speech-bubble" id="char-speech">Andiamo a rubare?</div>
+                </div>
+
+                <div class="tools-panel">
+                    <h3>🔧 Banco da Lavoro</h3>
+                    
+                    <div class="lockpick-display">
+                        <span style="font-size: 24px;">🗝️</span>
+                        <span id="lockpick-count" class="counter-text">3</span>
+                        <span style="color: #aaa; font-size: 14px;">/ 6 Max</span>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn-action btn-daily" onclick="claimDaily()" id="btn-daily">
+                            🎁 Ritira (3)
+                        </button>
+                        <button class="btn-action btn-ad" onclick="watchAd()">
+                            📺 +1 Extra
+                        </button>
+                    </div>
+                </div>
+
+                <style>
+                    /* Contenitore centrale */
+                    .character-stage {
+                        flex-grow: 1;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        position: relative;
+                        z-index: 10; /* Sta sopra lo sfondo */
+                    }
+
+                    /* L'immagine del Procione */
+                    .char-img {
+                        width: 70vw;  /* Larghezza dinamica */
+                        max-width: 300px; /* Non diventa enorme su PC */
+                        filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6)); /* Ombra a terra realistica */
+                        
+                        /* Animazione "Respiro" continua */
+                        animation: float 4s ease-in-out infinite;
+                        
+                        /* Per rendere fluido il click */
+                        transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                        cursor: pointer;
+                    }
+
+                    /* Animazione Respiro (Galleggiamento) */
+                    @keyframes float {
+                        0% { transform: translateY(0px) scale(1); }
+                        50% { transform: translateY(-15px) scale(1.02); } /* Si alza e si gonfia appena */
+                        100% { transform: translateY(0px) scale(1); }
+                    }
+
+                    /* Classe che aggiungiamo via JS quando clicchi */
+                    .char-clicked {
+                        transform: scale(0.90) translateY(5px) !important; /* Si schiaccia */
+                        filter: brightness(1.2); /* Si illumina un po' */
+                    }
+
+                    /* Il fumetto */
+                    .speech-bubble {
+                        background: white;
+                        color: black;
+                        padding: 10px 20px;
+                        border-radius: 20px;
+                        border-bottom-left-radius: 0;
+                        font-weight: bold;
+                        position: absolute;
+                        top: 20px;
+                        right: 20px;
+                        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                        opacity: 0;
+                        transition: opacity 0.5s;
+                        font-size: 14px;
+                    }
+
+                    /* Stili pannello (migliorati) */
+                    .tools-panel {
+                        background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+                        padding: 20px 20px 90px 20px; /* Spazio extra sotto per la navbar */
+                        width: 100%;
+                        text-align: center;
+                    }
+                    .counter-text { font-size: 32px; font-weight: 800; color: #00ff9d; text-shadow: 0 0 10px rgba(0,255,157,0.3); }
+                </style>
+
+                <script>
+                    let lockpicks = 3;
+                    const maxLockpicks = 6;
+                    
+                    function tapCharacter() {
+                        const char = document.getElementById('hero-char');
+                        
+                        // 1. Feedback Visivo (Classe CSS)
+                        char.classList.add('char-clicked');
+                        // Rimuovi la classe dopo 100ms per farlo tornare normale
+                        setTimeout(() => char.classList.remove('char-clicked'), 100);
+
+                        // 2. Feedback Tattile (Vibrazione)
+                        if(window.Telegram.WebApp.HapticFeedback) {
+                            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+                        }
+
+                        // 3. Easter Egg: Mostra fumetto a caso
+                        if(Math.random() > 0.7) showSpeech();
+                    }
+
+                    function showSpeech() {
+                        const bubble = document.getElementById('char-speech');
+                        const frasi = ["Mi servono grimaldelli...", "Ho visto una banca piena!", "Attento alla polizia!", "Siamo ricchi!"];
+                        bubble.innerText = frasi[Math.floor(Math.random() * frasi.length)];
+                        bubble.style.opacity = 1;
+                        setTimeout(() => bubble.style.opacity = 0, 3000);
+                    }
+
+                    function claimDaily() {
+                        if(lockpicks >= maxLockpicks) return;
+                        lockpicks = Math.min(lockpicks + 3, maxLockpicks);
+                        document.getElementById('lockpick-count').innerText = lockpicks;
+                        document.getElementById('btn-daily').disabled = true;
+                        document.getElementById('btn-daily').innerText = "✅ Fatto";
+                        if(window.Telegram.WebApp.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                    }
+
+                    function watchAd() {
+                        // Qui simuli l'ad
+                        if(lockpicks < maxLockpicks) {
+                            lockpicks++;
+                            document.getElementById('lockpick-count').innerText = lockpicks;
+                        }
+                    }
+                </script>
+            </div>
 
             <div id="view-caveau" class="view">
                 <h2 class="room-title">💰 Il Caveau</h2>
@@ -214,3 +365,4 @@
     </script>
 </body>
 </html>
+
