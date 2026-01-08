@@ -6,71 +6,210 @@
     <title>Raccoon Thieves</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* --- STILI GENERALI --- */
         body {
-            /* Imposta l'immagine come sfondo a tutto schermo */
-            background-image: url('intro_bg.png');
-            background-size: cover;   /* Copre tutto lo spazio disponibile */
-            background-position: center; /* Centra l'immagine */
-            background-repeat: no-repeat;
-            
             margin: 0;
             padding: 0;
-            height: 100vh; /* Altezza 100% della finestra */
+            height: 100vh;
             width: 100vw;
-            overflow: hidden; /* Niente scroll */
-
-            /* Flexbox per centrare il bottone perfettamente */
-            display: flex;
-            justify-content: center; /* Centro orizzontale */
-            align-items: center;     /* Centro verticale */
-            font-family: sans-serif;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            background-color: #000;
+            
+            /* Gestione Sfondo */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.4s ease-in-out; /* Effetto dissolvenza quando cambi stanza */
         }
 
-        /* Stile del bottone PLAY centrale */
+        /* --- CLASSI PER GLI SFONDI --- */
+        .bg-intro  { background-image: url('intro_bg.png'); }
+        .bg-covo   { background-image: url('covo_bg.png'); }
+        .bg-caveau { background-image: url('caveau_bg.png'); }
+
+        /* --- SCHERMATA INTRO (Iniziale) --- */
+        #screen-intro {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+        }
+
         .btn-play {
             background: linear-gradient(90deg, #ad00ff, #6b00ff);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            padding: 20px 60px;
-            border-radius: 50px; /* Bordi molto arrotondati */
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 18px 50px;
+            border-radius: 50px;
             color: white;
-            font-size: 32px; /* Testo grande */
-            font-weight: 900; /* Testo molto grassetto */
+            font-size: 28px;
+            font-weight: 900;
             text-transform: uppercase;
+            box-shadow: 0 0 25px #ad00ff;
             cursor: pointer;
-            
-            /* Effetto Neon/Glow */
-            box-shadow: 0 0 20px #ad00ff, 0 0 40px rgba(173, 0, 255, 0.6);
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            
-            transition: transform 0.1s ease, box-shadow 0.2s ease;
+            transition: transform 0.1s;
+        }
+        .btn-play:active { transform: scale(0.95); }
+
+        /* --- SCHERMATA DI GIOCO (Contenitore Principale) --- */
+        #screen-game {
+            display: none; /* Nascosto all'inizio */
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
         }
 
-        /* Effetto quando premi il bottone */
-        .btn-play:active {
-            transform: scale(0.95); /* Si rimpicciolisce leggermente */
-            box-shadow: 0 0 10px #ad00ff; /* Il glow diminuisce un po' */
+        /* Area centrale dove cambia il contenuto */
+        .content-area {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
+        /* Le singole "Viste" (stanze) */
+        .view {
+            display: none; /* Di base nascoste */
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+        /* Classe utility per mostrare la vista attiva */
+        .view.active-view { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Titoli delle stanze (opzionale, per capire dove sei) */
+        h2.room-title {
+            background: rgba(0,0,0,0.6);
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(5px);
+        }
+
+        /* --- BARRA DI NAVIGAZIONE (Bottom Bar) --- */
+        .navbar {
+            height: 75px;
+            background: rgba(15, 15, 20, 0.95);
+            border-top: 2px solid #ad00ff;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: env(safe-area-inset-bottom); /* Per iPhone X+ */
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 11px;
+            font-weight: bold;
+            width: 60px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-icon { font-size: 24px; margin-bottom: 4px; filter: grayscale(100%); transition: 0.2s; }
+
+        /* Stile quando il bottone è attivo */
+        .nav-item.active .nav-icon { 
+            filter: grayscale(0%); 
+            transform: translateY(-3px);
+            text-shadow: 0 0 10px currentColor;
+        }
+        .nav-item.active { color: white; }
+
+        /* Colori specifici per le icone attive */
+        .nav-covo.active   { color: #ad00ff; } /* Viola */
+        .nav-caveau.active { color: #ffd700; } /* Oro */
+        
     </style>
 </head>
-<body>
+<body class="bg-intro">
 
-    <button class="btn-play" onclick="startGame()">PLAY</button>
+    <div id="screen-intro">
+        <button class="btn-play" onclick="startGame()">PLAY</button>
+    </div>
+
+    <div id="screen-game">
+        
+        <div class="content-area">
+            
+            <div id="view-covo" class="view active-view">
+                </div>
+
+            <div id="view-caveau" class="view">
+                <h2 class="room-title">💰 Il Caveau</h2>
+                <p style="background:rgba(0,0,0,0.5); padding:5px; border-radius:5px;">Saldo: 0 $RAC</p>
+            </div>
+
+        </div>
+
+        <div class="navbar">
+            <div class="nav-item nav-covo active" onclick="switchTab('covo')">
+                <div class="nav-icon">🏠</div>
+                <div>COVO</div>
+            </div>
+
+            <div class="nav-item nav-caveau" onclick="switchTab('caveau')">
+                <div class="nav-icon">💎</div>
+                <div>CAVEAU</div>
+            </div>
+
+            <div class="nav-item" onclick="alert('Presto in arrivo!')">
+                <div class="nav-icon">🗺️</div>
+                <div>CITTÀ</div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // Inizializza la WebApp di Telegram
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Espande a tutto schermo appena aperto
+        tg.expand();
 
+        // Funzione per avviare il gioco
         function startGame() {
-            // Vibrazione di feedback (opzionale, ma figo)
-            if(tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('heavy');
-            }
+            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+            
+            // Passa dalla schermata Intro alla schermata Game
+            document.getElementById('screen-intro').style.display = 'none';
+            document.getElementById('screen-game').style.display = 'flex';
+            
+            // Imposta subito lo sfondo e la tab del Covo
+            switchTab('covo');
+        }
 
-            // Invia il segnale "play_game" al bot Python
-            // Il bot dovrà gestire questo messaggio per mandare la scena successiva
-            tg.sendData("play_game"); 
+        // Funzione GENIALE per gestire le tab
+        // tabName deve corrispondere all'ID della vista (es: view-covo) e alla classe sfondo (es: bg-covo)
+        function switchTab(tabName) {
+            if(tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
+
+            // 1. CAMBIA SFONDO BODY
+            // Rimuovi tutte le classi bg- conosciute e metti quella nuova
+            document.body.classList.remove('bg-intro', 'bg-covo', 'bg-caveau');
+            document.body.classList.add('bg-' + tabName);
+
+            // 2. GESTIONE DEI BOTTONI (NAVBAR)
+            // Togli 'active' da tutti i bottoni
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            // Aggiungi 'active' solo al bottone cliccato (cerchiamo quello che contiene la classe nav-tabName)
+            const activeBtn = document.querySelector('.nav-' + tabName);
+            if(activeBtn) activeBtn.classList.add('active');
+
+            // 3. CAMBIO VISTA CENTRALE
+            // Nascondi tutte le viste
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active-view'));
+            // Mostra solo quella scelta
+            document.getElementById('view-' + tabName).classList.add('active-view');
         }
     </script>
 </body>
