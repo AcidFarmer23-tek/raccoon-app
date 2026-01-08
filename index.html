@@ -145,7 +145,173 @@
         <div class="content-area">
             
             <div id="view-covo" class="view active-view">
+                
+                <div class="hud-top">
+                    <div class="stat-box money-box">
+                        💰 <span id="user-money">0</span> $RAC
+                    </div>
+                    <div class="stat-box level-box">
+                        ⭐ Liv. 1
+                    </div>
                 </div>
+
+                <div class="character-container">
+                    <img src="raccoo_char.png" alt="Raccoon" class="char-img">
+                </div>
+
+                <div class="tools-panel">
+                    <h3>🔧 Banco da Lavoro</h3>
+                    
+                    <div class="lockpick-display">
+                        <span style="font-size: 24px;">🗝️</span>
+                        <span id="lockpick-count" style="font-size: 32px; font-weight: bold; color: #00ff9d;">3</span>
+                        <span style="color: #666; font-size: 14px;">/ 6 Max</span>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn-action btn-daily" onclick="claimDaily()" id="btn-daily">
+                            🎁 Ritira (3)
+                        </button>
+                        
+                        <button class="btn-action btn-ad" onclick="watchAd()">
+                            📺 Costruisci (+1)
+                        </button>
+                    </div>
+                </div>
+
+                <style>
+                    /* HUD in alto */
+                    .hud-top {
+                        position: absolute;
+                        top: 20px;
+                        width: 100%;
+                        display: flex;
+                        justify-content: space-between;
+                        padding: 0 20px;
+                        box-sizing: border-box;
+                    }
+                    .stat-box {
+                        background: rgba(0, 0, 0, 0.7);
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        padding: 8px 15px;
+                        border-radius: 20px;
+                        font-weight: bold;
+                        backdrop-filter: blur(4px);
+                    }
+                    .money-box { color: #ffd700; border-color: #ffd700; }
+                    .level-box { color: #00ff9d; border-color: #00ff9d; }
+
+                    /* Personaggio */
+                    .character-container {
+                        height: 50vh; /* Occupa metà schermo */
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    .char-img {
+                        max-height: 100%;
+                        max-width: 80%;
+                        filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+                        animation: float 3s ease-in-out infinite;
+                    }
+                    @keyframes float {
+                        0% { transform: translateY(0px); }
+                        50% { transform: translateY(-15px); } /* Galleggia su e giù */
+                        100% { transform: translateY(0px); }
+                    }
+
+                    /* Pannello Strumenti */
+                    .tools-panel {
+                        background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+                        padding: 20px;
+                        text-align: center;
+                        width: 100%;
+                        box-sizing: border-box;
+                    }
+                    .tools-panel h3 { margin: 0 0 10px 0; font-size: 16px; color: #ccc; text-transform: uppercase; letter-spacing: 1px; }
+
+                    .lockpick-display {
+                        margin-bottom: 15px;
+                        background: rgba(255, 255, 255, 0.1);
+                        display: inline-block;
+                        padding: 10px 25px;
+                        border-radius: 15px;
+                        border: 1px solid rgba(255,255,255,0.1);
+                    }
+
+                    .action-buttons {
+                        display: flex;
+                        gap: 10px;
+                        justify-content: center;
+                    }
+
+                    .btn-action {
+                        border: none;
+                        padding: 12px 20px;
+                        border-radius: 12px;
+                        font-weight: bold;
+                        color: white;
+                        cursor: pointer;
+                        flex: 1;
+                        max-width: 160px;
+                        font-size: 14px;
+                        transition: transform 0.1s;
+                    }
+                    .btn-action:active { transform: scale(0.95); }
+
+                    .btn-daily { background: linear-gradient(45deg, #00ff9d, #00b8ff); color: black; }
+                    .btn-daily:disabled { background: #333; color: #666; cursor: not-allowed; }
+                    
+                    .btn-ad { background: linear-gradient(45deg, #ff4b1f, #ff9068); }
+                </style>
+
+                <script>
+                    // Variabili di stato (in futuro le salveremo nel database)
+                    let lockpicks = 3; 
+                    let maxLockpicks = 6;
+                    let money = 0;
+                    let dailyClaimed = false; // Per ora resetta al refresh, poi useremo la data
+
+                    // Funzione per ritirare i giornalieri
+                    function claimDaily() {
+                        if(dailyClaimed) return;
+                        
+                        if (lockpicks + 3 <= maxLockpicks) {
+                            lockpicks += 3;
+                        } else {
+                            lockpicks = maxLockpicks; // Non superare il massimo
+                        }
+                        
+                        dailyClaimed = true;
+                        document.getElementById('btn-daily').disabled = true;
+                        document.getElementById('btn-daily').innerText = "✅ Ritirati";
+                        updateUI();
+                        
+                        if(window.Telegram.WebApp.HapticFeedback) 
+                            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                    }
+
+                    // Funzione (finta) per guardare pubblicità
+                    function watchAd() {
+                        if (lockpicks >= maxLockpicks) {
+                            alert("Hai le tasche piene! Usali prima.");
+                            return;
+                        }
+
+                        // Qui in futuro metteremo il codice Adsgram
+                        alert("🎥 Simulazione Pubblicità...\n+1 Grimaldello!");
+                        
+                        lockpicks++;
+                        updateUI();
+                    }
+
+                    // Aggiorna i testi a schermo
+                    function updateUI() {
+                        document.getElementById('lockpick-count').innerText = lockpicks;
+                        document.getElementById('user-money').innerText = money;
+                    }
+                </script>
+            </div>
 
             <div id="view-caveau" class="view">
                 <h2 class="room-title">💰 Il Caveau</h2>
@@ -157,189 +323,7 @@
         <div class="navbar">
             <div class="nav-item nav-covo active" onclick="switchTab('covo')">
                 <div class="nav-icon">🏠</div>
-                <div id="view-covo" class="view active-view">
-                
-                <div class="hud-top">
-                    <div class="stat-box money-box">
-                        💰 <span id="user-money">0</span> $RAC
-                    </div>
-                    <div class="stat-box level-box">
-                        ⭐ Lvl 1
-                    </div>
-                </div>
-
-                <div class="character-stage">
-                    <img src="raccoo_char.png" 
-                         alt="Raccoon Character" 
-                         class="char-img" 
-                         id="hero-char"
-                         onclick="tapCharacter()">
-                         
-                    <div class="speech-bubble" id="char-speech">Let's heist!</div>
-                </div>
-
-                <div class="tools-panel">
-                    <h3>🔧 Workbench</h3>
-                    
-                    <div class="lockpick-display">
-                        <span style="font-size: 24px;">🗝️</span>
-                        <span id="lockpick-count" class="counter-text">3</span>
-                        <span style="color: #aaa; font-size: 14px; margin-left:5px;">/ 6 Max</span>
-                    </div>
-
-                    <div class="action-buttons">
-                        <button class="btn-action btn-daily" onclick="claimDaily()" id="btn-daily">
-                            🎁 Claim (3)
-                        </button>
-                        <button class="btn-action btn-ad" onclick="watchAd()">
-                            📺 Craft (+1)
-                        </button>
-                    </div>
-                </div>
-
-                <style>
-                    /* Layout Fix: Flex Column makes it fill height properly */
-                    #view-covo {
-                        display: flex;
-                        flex-direction: column;
-                        height: 100%;
-                        width: 100%;
-                        overflow: hidden;
-                    }
-
-                    .hud-top {
-                        display: flex;
-                        justify-content: space-between;
-                        padding: 15px 20px;
-                        width: 100%;
-                        box-sizing: border-box;
-                        z-index: 20; /* Always on top */
-                    }
-
-                    /* The Stage fills all available empty space */
-                    .character-stage {
-                        flex-grow: 1; 
-                        display: flex;
-                        align-items: center; /* Vertical Center */
-                        justify-content: center; /* Horizontal Center */
-                        position: relative;
-                        width: 100%;
-                    }
-
-                    .char-img {
-                        width: 65vw; /* Slightly smaller to fit better */
-                        max-width: 280px;
-                        filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
-                        animation: float 4s ease-in-out infinite;
-                        transition: transform 0.1s;
-                        cursor: pointer;
-                        z-index: 10;
-                    }
-
-                    /* The Panel sits at the bottom naturally now */
-                    .tools-panel {
-                        background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
-                        padding: 40px 20px 20px 20px; /* More padding on top for fade effect */
-                        width: 100%;
-                        box-sizing: border-box;
-                        text-align: center;
-                        z-index: 15;
-                    }
-
-                    .tools-panel h3 {
-                        margin: 0 0 10px 0;
-                        font-size: 14px;
-                        color: #ccc;
-                        text-transform: uppercase;
-                        letter-spacing: 2px;
-                        opacity: 0.8;
-                    }
-
-                    /* Speech Bubble Style */
-                    .speech-bubble {
-                        position: absolute;
-                        top: 10%;
-                        right: 10%;
-                        background: white;
-                        color: black;
-                        padding: 8px 15px;
-                        border-radius: 15px;
-                        border-bottom-left-radius: 0;
-                        font-weight: bold;
-                        font-size: 14px;
-                        opacity: 0;
-                        transition: opacity 0.3s;
-                        pointer-events: none;
-                        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-                        z-index: 20;
-                    }
-                </style>
-
-                <script>
-                    // Use window scope variables to avoid re-declaration errors if reloaded
-                    window.lockpicks = window.lockpicks || 3;
-                    const maxLockpicks = 6;
-                    
-                    // Update UI immediately on load
-                    updateUI();
-
-                    function updateUI() {
-                        const countEl = document.getElementById('lockpick-count');
-                        if(countEl) countEl.innerText = window.lockpicks;
-                    }
-                    
-                    function tapCharacter() {
-                        const char = document.getElementById('hero-char');
-                        char.style.transform = "scale(0.95) translateY(5px)";
-                        setTimeout(() => char.style.transform = "scale(1) translateY(0)", 100);
-
-                        if(window.Telegram.WebApp.HapticFeedback) {
-                            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-                        }
-
-                        // 30% chance to speak
-                        if(Math.random() > 0.7) showSpeech();
-                    }
-
-                    function showSpeech() {
-                        const bubble = document.getElementById('char-speech');
-                        const phrases = [
-                            "Need more lockpicks...", 
-                            "I saw a huge bank!", 
-                            "Cops are sleeping...", 
-                            "Let's get rich!",
-                            "My bag is empty :("
-                        ];
-                        bubble.innerText = phrases[Math.floor(Math.random() * phrases.length)];
-                        bubble.style.opacity = 1;
-                        setTimeout(() => bubble.style.opacity = 0, 2500);
-                    }
-
-                    function claimDaily() {
-                        if(window.lockpicks >= maxLockpicks) return;
-                        
-                        window.lockpicks = Math.min(window.lockpicks + 3, maxLockpicks);
-                        updateUI();
-                        
-                        const btn = document.getElementById('btn-daily');
-                        btn.disabled = true;
-                        btn.innerText = "✅ Claimed";
-                        btn.style.opacity = "0.6";
-                        
-                        if(window.Telegram.WebApp.HapticFeedback) 
-                            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                    }
-
-                    function watchAd() {
-                        if(window.lockpicks < maxLockpicks) {
-                            window.lockpicks++;
-                            updateUI();
-                            // Optional: Alert replaced by simple feedback
-                        } else {
-                            // Shake effect or warning could go here
-                        }
-                    }
-                </script>
+                <div>COVO</div>
             </div>
 
             <div class="nav-item nav-caveau" onclick="switchTab('caveau')">
