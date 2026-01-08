@@ -1,47 +1,50 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Raccoon Thieves</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* --- STILI GENERALI --- */
+        /* --- GENERAL STYLES --- */
         body {
             margin: 0;
             padding: 0;
             height: 100vh;
             width: 100vw;
             overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             color: white;
             background-color: #000;
-            
-            /* Gestione Sfondo */
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            transition: background-image 0.4s ease-in-out; /* Effetto dissolvenza quando cambi stanza */
+            transition: background-image 0.3s ease-in-out;
         }
 
-        /* --- CLASSI PER GLI SFONDI --- */
+        /* BACKGROUNDS */
         .bg-intro  { background-image: url('intro_bg.png'); }
         .bg-covo   { background-image: url('covo_bg.png'); }
         .bg-caveau { background-image: url('caveau_bg.png'); }
+        .bg-tasks  { background-image: url('intro_bg.png'); /* Usa intro o un'altra scura per le task */ }
+        /* Placeholder for City until you have it */
+        .bg-city   { background-color: #1a1a2e; } 
 
-        /* --- SCHERMATA INTRO (Iniziale) --- */
+        /* --- INTRO SCREEN --- */
         #screen-intro {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100%;
             width: 100%;
+            position: fixed;
+            top: 0; left: 0; z-index: 1000;
         }
 
         .btn-play {
             background: linear-gradient(90deg, #ad00ff, #6b00ff);
             border: 2px solid rgba(255,255,255,0.3);
-            padding: 18px 50px;
+            padding: 18px 60px;
             border-radius: 50px;
             color: white;
             font-size: 28px;
@@ -53,85 +56,221 @@
         }
         .btn-play:active { transform: scale(0.95); }
 
-        /* --- SCHERMATA DI GIOCO (Contenitore Principale) --- */
+        /* --- GAME CONTAINER --- */
         #screen-game {
-            display: none; /* Nascosto all'inizio */
+            display: none; /* Hidden initially */
             flex-direction: column;
             height: 100%;
             width: 100%;
         }
 
-        /* Area centrale dove cambia il contenuto */
+        /* --- TOP HUD (Shared across tabs) --- */
+        .hud-top {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 15px;
+            width: 100%;
+            box-sizing: border-box;
+            position: absolute;
+            top: 0;
+            z-index: 50;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .money-box { color: #ffd700; border-color: rgba(255, 215, 0, 0.3); }
+        .keys-box  { color: #00ff9d; border-color: rgba(0, 255, 157, 0.3); }
+        .level-box { color: white; border-color: rgba(255, 255, 255, 0.3); margin-left: auto; }
+
+        /* --- CONTENT AREA --- */
         .content-area {
             flex-grow: 1;
+            position: relative;
+            overflow-y: auto; /* Allow scrolling if content is long */
+            overflow-x: hidden;
+        }
+
+        .view {
+            display: none;
+            height: 100%;
+            width: 100%;
+            animation: fadeIn 0.3s;
+        }
+        .view.active-view { display: flex; flex-direction: column; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- COVO VIEW (Clean) --- */
+        #view-covo {
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .character-stage {
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
+            margin-top: 50px; /* Spinge il procione un po' giù dall'HUD */
         }
 
-        /* Le singole "Viste" (stanze) */
-        .view {
-            display: none; /* Di base nascoste */
-            text-align: center;
-            animation: fadeIn 0.5s;
+        .char-img {
+            width: 75vw;
+            max-width: 320px;
+            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.7));
+            animation: float 4s ease-in-out infinite;
+            transition: transform 0.1s;
+            cursor: pointer;
         }
-        /* Classe utility per mostrare la vista attiva */
-        .view.active-view { display: block; }
+        .char-img:active { transform: scale(0.95) translateY(5px); }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
         }
 
-        /* Titoli delle stanze (opzionale, per capire dove sei) */
-        h2.room-title {
-            background: rgba(0,0,0,0.6);
-            padding: 10px 20px;
+        .speech-bubble {
+            position: absolute;
+            top: -20px;
+            right: 10px;
+            background: white;
+            color: black;
+            padding: 8px 15px;
             border-radius: 15px;
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(5px);
+            border-bottom-left-radius: 0;
+            font-weight: bold;
+            font-size: 13px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
         }
 
-        /* --- BARRA DI NAVIGAZIONE (Bottom Bar) --- */
+        /* --- TASKS VIEW (New!) --- */
+        #view-tasks {
+            padding: 80px 20px 20px 20px; /* Padding top per non finire sotto l'HUD */
+            box-sizing: border-box;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+            width: 100%;
+            text-align: left;
+        }
+
+        /* Daily Rewards Block */
+        .rewards-container {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        
+        .reward-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .btn-action {
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .btn-claim { background: #00ff9d; color: black; }
+        .btn-ad { background: #ff4b1f; color: white; }
+        .btn-claim:disabled { background: #555; color: #888; }
+
+        /* Social Tasks List */
+        .task-list {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .task-item {
+            background: rgba(20, 20, 30, 0.8);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid rgba(173, 0, 255, 0.2);
+        }
+
+        .task-info { display: flex; align-items: center; gap: 12px; }
+        .task-icon { font-size: 24px; }
+        .task-text h4 { margin: 0; font-size: 14px; }
+        .task-text p { margin: 2px 0 0 0; font-size: 11px; color: #aaa; }
+        
+        .task-btn {
+            background: transparent;
+            border: 1px solid #ad00ff;
+            color: #ad00ff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        /* --- NAVBAR --- */
         .navbar {
-            height: 75px;
-            background: rgba(15, 15, 20, 0.95);
-            border-top: 2px solid #ad00ff;
+            height: 70px;
+            background: rgba(10, 10, 15, 0.95);
+            border-top: 1px solid #333;
             display: flex;
             justify-content: space-around;
             align-items: center;
-            padding-bottom: env(safe-area-inset-bottom); /* Per iPhone X+ */
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 100;
         }
 
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            color: #666;
-            font-size: 11px;
+            color: #555;
+            font-size: 10px;
             font-weight: bold;
-            width: 60px;
-            cursor: pointer;
-            transition: all 0.2s;
+            width: 25%; /* 4 items = 25% width each */
         }
 
-        .nav-icon { font-size: 24px; margin-bottom: 4px; filter: grayscale(100%); transition: 0.2s; }
-
-        /* Stile quando il bottone è attivo */
-        .nav-item.active .nav-icon { 
-            filter: grayscale(0%); 
-            transform: translateY(-3px);
-            text-shadow: 0 0 10px currentColor;
-        }
+        .nav-icon { font-size: 22px; margin-bottom: 4px; filter: grayscale(100%); transition: 0.2s; }
+        .nav-item.active .nav-icon { filter: grayscale(0%); transform: translateY(-3px); }
         .nav-item.active { color: white; }
-
-        /* Colori specifici per le icone attive */
-        .nav-covo.active   { color: #ad00ff; } /* Viola */
-        .nav-caveau.active { color: #ffd700; } /* Oro */
         
+        /* Nav specific colors */
+        .nav-covo.active { color: #ad00ff; }
+        .nav-city.active { color: #00b8ff; }
+        .nav-tasks.active { color: #ffd700; }
+        .nav-caveau.active { color: #ff4b1f; }
+
     </style>
 </head>
 <body class="bg-intro">
@@ -142,180 +281,78 @@
 
     <div id="screen-game">
         
+        <div class="hud-top">
+            <div class="stat-box keys-box">
+                🗝️ <span id="hud-keys">3</span>/6
+            </div>
+            <div class="stat-box money-box">
+                💰 <span id="hud-money">0</span>
+            </div>
+            <div class="stat-box level-box">
+                ⭐ Lvl 1
+            </div>
+        </div>
+
         <div class="content-area">
             
             <div id="view-covo" class="view active-view">
+                <div class="character-stage">
+                    <img src="raccoo_char.png" alt="Raccoon" class="char-img" id="hero-char" onclick="tapCharacter()">
+                    <div class="speech-bubble" id="char-speech">Let's heist!</div>
+                </div>
+            </div>
+
+            <div id="view-city" class="view">
+                <h2 class="section-title" style="text-align:center; margin-top:100px;">City Map</h2>
+                <p style="text-align:center; color:#aaa;">Select a target to rob...</p>
+                </div>
+
+            <div id="view-tasks" class="view">
+                <div class="section-title">⚡ Daily & Tools</div>
                 
-                <div class="hud-top">
-                    <div class="stat-box money-box">
-                        💰 <span id="user-money">0</span> $RAC
+                <div class="rewards-container">
+                    <div class="reward-card">
+                        <div style="font-size:30px;">🎁</div>
+                        <div style="font-size:12px; margin-top:5px;">Daily Supply</div>
+                        <button class="btn-action btn-claim" id="btn-daily" onclick="claimDaily()">Claim (3)</button>
                     </div>
-                    <div class="stat-box level-box">
-                        ⭐ Liv. 1
+                    <div class="reward-card">
+                        <div style="font-size:30px;">📺</div>
+                        <div style="font-size:12px; margin-top:5px;">Watch Ad</div>
+                        <button class="btn-action btn-ad" onclick="watchAd()">Craft (+1)</button>
                     </div>
                 </div>
 
-                <div class="character-container">
-                    <img src="raccoo_char.png" alt="Raccoon" class="char-img">
-                </div>
-
-                <div class="tools-panel">
-                    <h3>🔧 Banco da Lavoro</h3>
+                <div class="section-title">🚀 Social Tasks</div>
+                
+                <div class="task-list">
+                    <div class="task-item">
+                        <div class="task-info">
+                            <div class="task-icon">📢</div>
+                            <div class="task-text">
+                                <h4>Join Channel</h4>
+                                <p>+1 Lockpick</p>
+                            </div>
+                        </div>
+                        <button class="task-btn" onclick="completeTask(this)">GO</button>
+                    </div>
                     
-                    <div class="lockpick-display">
-                        <span style="font-size: 24px;">🗝️</span>
-                        <span id="lockpick-count" style="font-size: 32px; font-weight: bold; color: #00ff9d;">3</span>
-                        <span style="color: #666; font-size: 14px;">/ 6 Max</span>
-                    </div>
-
-                    <div class="action-buttons">
-                        <button class="btn-action btn-daily" onclick="claimDaily()" id="btn-daily">
-                            🎁 Ritira (3)
-                        </button>
-                        
-                        <button class="btn-action btn-ad" onclick="watchAd()">
-                            📺 Costruisci (+1)
-                        </button>
+                    <div class="task-item">
+                        <div class="task-info">
+                            <div class="task-icon">🐦</div>
+                            <div class="task-text">
+                                <h4>Follow X</h4>
+                                <p>+1 Lockpick</p>
+                            </div>
+                        </div>
+                        <button class="task-btn" onclick="completeTask(this)">GO</button>
                     </div>
                 </div>
-
-                <style>
-                    /* HUD in alto */
-                    .hud-top {
-                        position: absolute;
-                        top: 20px;
-                        width: 100%;
-                        display: flex;
-                        justify-content: space-between;
-                        padding: 0 20px;
-                        box-sizing: border-box;
-                    }
-                    .stat-box {
-                        background: rgba(0, 0, 0, 0.7);
-                        border: 1px solid rgba(255, 255, 255, 0.2);
-                        padding: 8px 15px;
-                        border-radius: 20px;
-                        font-weight: bold;
-                        backdrop-filter: blur(4px);
-                    }
-                    .money-box { color: #ffd700; border-color: #ffd700; }
-                    .level-box { color: #00ff9d; border-color: #00ff9d; }
-
-                    /* Personaggio */
-                    .character-container {
-                        height: 50vh; /* Occupa metà schermo */
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    }
-                    .char-img {
-                        max-height: 100%;
-                        max-width: 80%;
-                        filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
-                        animation: float 3s ease-in-out infinite;
-                    }
-                    @keyframes float {
-                        0% { transform: translateY(0px); }
-                        50% { transform: translateY(-15px); } /* Galleggia su e giù */
-                        100% { transform: translateY(0px); }
-                    }
-
-                    /* Pannello Strumenti */
-                    .tools-panel {
-                        background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-                        padding: 20px;
-                        text-align: center;
-                        width: 100%;
-                        box-sizing: border-box;
-                    }
-                    .tools-panel h3 { margin: 0 0 10px 0; font-size: 16px; color: #ccc; text-transform: uppercase; letter-spacing: 1px; }
-
-                    .lockpick-display {
-                        margin-bottom: 15px;
-                        background: rgba(255, 255, 255, 0.1);
-                        display: inline-block;
-                        padding: 10px 25px;
-                        border-radius: 15px;
-                        border: 1px solid rgba(255,255,255,0.1);
-                    }
-
-                    .action-buttons {
-                        display: flex;
-                        gap: 10px;
-                        justify-content: center;
-                    }
-
-                    .btn-action {
-                        border: none;
-                        padding: 12px 20px;
-                        border-radius: 12px;
-                        font-weight: bold;
-                        color: white;
-                        cursor: pointer;
-                        flex: 1;
-                        max-width: 160px;
-                        font-size: 14px;
-                        transition: transform 0.1s;
-                    }
-                    .btn-action:active { transform: scale(0.95); }
-
-                    .btn-daily { background: linear-gradient(45deg, #00ff9d, #00b8ff); color: black; }
-                    .btn-daily:disabled { background: #333; color: #666; cursor: not-allowed; }
-                    
-                    .btn-ad { background: linear-gradient(45deg, #ff4b1f, #ff9068); }
-                </style>
-
-                <script>
-                    // Variabili di stato (in futuro le salveremo nel database)
-                    let lockpicks = 3; 
-                    let maxLockpicks = 6;
-                    let money = 0;
-                    let dailyClaimed = false; // Per ora resetta al refresh, poi useremo la data
-
-                    // Funzione per ritirare i giornalieri
-                    function claimDaily() {
-                        if(dailyClaimed) return;
-                        
-                        if (lockpicks + 3 <= maxLockpicks) {
-                            lockpicks += 3;
-                        } else {
-                            lockpicks = maxLockpicks; // Non superare il massimo
-                        }
-                        
-                        dailyClaimed = true;
-                        document.getElementById('btn-daily').disabled = true;
-                        document.getElementById('btn-daily').innerText = "✅ Ritirati";
-                        updateUI();
-                        
-                        if(window.Telegram.WebApp.HapticFeedback) 
-                            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                    }
-
-                    // Funzione (finta) per guardare pubblicità
-                    function watchAd() {
-                        if (lockpicks >= maxLockpicks) {
-                            alert("Hai le tasche piene! Usali prima.");
-                            return;
-                        }
-
-                        // Qui in futuro metteremo il codice Adsgram
-                        alert("🎥 Simulazione Pubblicità...\n+1 Grimaldello!");
-                        
-                        lockpicks++;
-                        updateUI();
-                    }
-
-                    // Aggiorna i testi a schermo
-                    function updateUI() {
-                        document.getElementById('lockpick-count').innerText = lockpicks;
-                        document.getElementById('user-money').innerText = money;
-                    }
-                </script>
             </div>
 
             <div id="view-caveau" class="view">
-                <h2 class="room-title">💰 Il Caveau</h2>
-                <p style="background:rgba(0,0,0,0.5); padding:5px; border-radius:5px;">Saldo: 0 $RAC</p>
+                <h2 class="section-title" style="text-align:center; margin-top:100px;">💰 My Stash</h2>
+                <p style="text-align:center;">Total Net Worth: 0 $RAC</p>
             </div>
 
         </div>
@@ -323,17 +360,19 @@
         <div class="navbar">
             <div class="nav-item nav-covo active" onclick="switchTab('covo')">
                 <div class="nav-icon">🏠</div>
-                <div>COVO</div>
+                <div>HOME</div>
             </div>
-
+            <div class="nav-item nav-city" onclick="switchTab('city')">
+                <div class="nav-icon">🗺️</div>
+                <div>CITY</div>
+            </div>
+            <div class="nav-item nav-tasks" onclick="switchTab('tasks')">
+                <div class="nav-icon">⚡</div>
+                <div>TASKS</div>
+            </div>
             <div class="nav-item nav-caveau" onclick="switchTab('caveau')">
                 <div class="nav-icon">💎</div>
-                <div>CAVEAU</div>
-            </div>
-
-            <div class="nav-item" onclick="alert('Presto in arrivo!')">
-                <div class="nav-icon">🗺️</div>
-                <div>CITTÀ</div>
+                <div>VAULT</div>
             </div>
         </div>
     </div>
@@ -342,40 +381,95 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Funzione per avviare il gioco
+        // Game State
+        window.lockpicks = 3;
+        window.maxLockpicks = 6;
+        window.money = 0;
+
+        // Init
+        updateHUD();
+
         function startGame() {
-            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
-            
-            // Passa dalla schermata Intro alla schermata Game
             document.getElementById('screen-intro').style.display = 'none';
             document.getElementById('screen-game').style.display = 'flex';
-            
-            // Imposta subito lo sfondo e la tab del Covo
             switchTab('covo');
         }
 
-        // Funzione GENIALE per gestire le tab
-        // tabName deve corrispondere all'ID della vista (es: view-covo) e alla classe sfondo (es: bg-covo)
         function switchTab(tabName) {
             if(tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
 
-            // 1. CAMBIA SFONDO BODY
-            // Rimuovi tutte le classi bg- conosciute e metti quella nuova
-            document.body.classList.remove('bg-intro', 'bg-covo', 'bg-caveau');
+            // Change Background
+            document.body.className = ''; // Reset classes
             document.body.classList.add('bg-' + tabName);
 
-            // 2. GESTIONE DEI BOTTONI (NAVBAR)
-            // Togli 'active' da tutti i bottoni
+            // Change Navbar Active State
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            // Aggiungi 'active' solo al bottone cliccato (cerchiamo quello che contiene la classe nav-tabName)
-            const activeBtn = document.querySelector('.nav-' + tabName);
-            if(activeBtn) activeBtn.classList.add('active');
+            document.querySelector('.nav-' + tabName).classList.add('active');
 
-            // 3. CAMBIO VISTA CENTRALE
-            // Nascondi tutte le viste
+            // Change View
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active-view'));
-            // Mostra solo quella scelta
             document.getElementById('view-' + tabName).classList.add('active-view');
+        }
+
+        function updateHUD() {
+            document.getElementById('hud-keys').innerText = window.lockpicks;
+            document.getElementById('hud-money').innerText = window.money;
+        }
+
+        // --- TASKS LOGIC ---
+        function claimDaily() {
+            if(window.lockpicks >= window.maxLockpicks) return;
+            
+            window.lockpicks = Math.min(window.lockpicks + 3, window.maxLockpicks);
+            updateHUD();
+            
+            const btn = document.getElementById('btn-daily');
+            btn.disabled = true;
+            btn.innerText = "✅ Done";
+            
+            if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        function watchAd() {
+            // Simulazione Ad
+            if(window.lockpicks < window.maxLockpicks) {
+                window.lockpicks++;
+                updateHUD();
+                alert("Ad watched! +1 Lockpick"); // Placeholder
+            } else {
+                alert("Bag full!");
+            }
+        }
+
+        function completeTask(btnElement) {
+            // Simulazione apertura link
+            btnElement.innerText = "⏳ Checking...";
+            setTimeout(() => {
+                if(window.lockpicks < window.maxLockpicks) {
+                    window.lockpicks++;
+                    updateHUD();
+                    btnElement.innerText = "✅";
+                    btnElement.disabled = true;
+                    if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                } else {
+                    btnElement.innerText = "Full!";
+                }
+            }, 1000);
+        }
+
+        // --- CHARACTER INTERACTION ---
+        function tapCharacter() {
+            const char = document.getElementById('hero-char');
+            char.style.transform = "scale(0.95) translateY(5px)";
+            setTimeout(() => char.style.transform = "scale(1) translateY(0)", 100);
+            
+            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+
+            if(Math.random() > 0.7) {
+                const bubble = document.getElementById('char-speech');
+                bubble.style.opacity = 1;
+                setTimeout(() => bubble.style.opacity = 0, 2000);
+            }
         }
     </script>
 </body>
