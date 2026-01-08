@@ -144,171 +144,189 @@
         
         <div class="content-area">
             
-            <div id="view-covo" class="view active-view">
+           <div id="view-covo" class="view active-view">
                 
                 <div class="hud-top">
                     <div class="stat-box money-box">
                         💰 <span id="user-money">0</span> $RAC
                     </div>
                     <div class="stat-box level-box">
-                        ⭐ Liv. 1
+                        ⭐ Lvl 1
                     </div>
                 </div>
 
                 <div class="character-stage">
                     <img src="raccoo_char.png" 
-                         alt="Raccoon" 
+                         alt="Raccoon Character" 
                          class="char-img" 
                          id="hero-char"
                          onclick="tapCharacter()">
                          
-                    <div class="speech-bubble" id="char-speech">Andiamo a rubare?</div>
+                    <div class="speech-bubble" id="char-speech">Let's heist!</div>
                 </div>
 
                 <div class="tools-panel">
-                    <h3>🔧 Banco da Lavoro</h3>
+                    <h3>🔧 Workbench</h3>
                     
                     <div class="lockpick-display">
                         <span style="font-size: 24px;">🗝️</span>
                         <span id="lockpick-count" class="counter-text">3</span>
-                        <span style="color: #aaa; font-size: 14px;">/ 6 Max</span>
+                        <span style="color: #aaa; font-size: 14px; margin-left:5px;">/ 6 Max</span>
                     </div>
 
                     <div class="action-buttons">
                         <button class="btn-action btn-daily" onclick="claimDaily()" id="btn-daily">
-                            🎁 Ritira (3)
+                            🎁 Claim (3)
                         </button>
                         <button class="btn-action btn-ad" onclick="watchAd()">
-                            📺 +1 Extra
+                            📺 Craft (+1)
                         </button>
                     </div>
                 </div>
 
                 <style>
-                    /* Contenitore centrale */
-                    .character-stage {
-                        flex-grow: 1;
+                    /* Layout Fix: Flex Column makes it fill height properly */
+                    #view-covo {
                         display: flex;
                         flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
+                        height: 100%;
+                        width: 100%;
+                        overflow: hidden;
+                    }
+
+                    .hud-top {
+                        display: flex;
+                        justify-content: space-between;
+                        padding: 15px 20px;
+                        width: 100%;
+                        box-sizing: border-box;
+                        z-index: 20; /* Always on top */
+                    }
+
+                    /* The Stage fills all available empty space */
+                    .character-stage {
+                        flex-grow: 1; 
+                        display: flex;
+                        align-items: center; /* Vertical Center */
+                        justify-content: center; /* Horizontal Center */
                         position: relative;
-                        z-index: 10; /* Sta sopra lo sfondo */
+                        width: 100%;
                     }
 
-                    /* L'immagine del Procione */
                     .char-img {
-                        width: 70vw;  /* Larghezza dinamica */
-                        max-width: 300px; /* Non diventa enorme su PC */
-                        filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6)); /* Ombra a terra realistica */
-                        
-                        /* Animazione "Respiro" continua */
+                        width: 65vw; /* Slightly smaller to fit better */
+                        max-width: 280px;
+                        filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
                         animation: float 4s ease-in-out infinite;
-                        
-                        /* Per rendere fluido il click */
-                        transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                        transition: transform 0.1s;
                         cursor: pointer;
+                        z-index: 10;
                     }
 
-                    /* Animazione Respiro (Galleggiamento) */
-                    @keyframes float {
-                        0% { transform: translateY(0px) scale(1); }
-                        50% { transform: translateY(-15px) scale(1.02); } /* Si alza e si gonfia appena */
-                        100% { transform: translateY(0px) scale(1); }
+                    /* The Panel sits at the bottom naturally now */
+                    .tools-panel {
+                        background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
+                        padding: 40px 20px 20px 20px; /* More padding on top for fade effect */
+                        width: 100%;
+                        box-sizing: border-box;
+                        text-align: center;
+                        z-index: 15;
                     }
 
-                    /* Classe che aggiungiamo via JS quando clicchi */
-                    .char-clicked {
-                        transform: scale(0.90) translateY(5px) !important; /* Si schiaccia */
-                        filter: brightness(1.2); /* Si illumina un po' */
+                    .tools-panel h3 {
+                        margin: 0 0 10px 0;
+                        font-size: 14px;
+                        color: #ccc;
+                        text-transform: uppercase;
+                        letter-spacing: 2px;
+                        opacity: 0.8;
                     }
 
-                    /* Il fumetto */
+                    /* Speech Bubble Style */
                     .speech-bubble {
+                        position: absolute;
+                        top: 10%;
+                        right: 10%;
                         background: white;
                         color: black;
-                        padding: 10px 20px;
-                        border-radius: 20px;
+                        padding: 8px 15px;
+                        border-radius: 15px;
                         border-bottom-left-radius: 0;
                         font-weight: bold;
-                        position: absolute;
-                        top: 20px;
-                        right: 20px;
-                        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                        opacity: 0;
-                        transition: opacity 0.5s;
                         font-size: 14px;
+                        opacity: 0;
+                        transition: opacity 0.3s;
+                        pointer-events: none;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+                        z-index: 20;
                     }
-
-                    /* Stili pannello (migliorati) */
-                    .tools-panel {
-                        background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
-                        padding: 20px 20px 90px 20px; /* Spazio extra sotto per la navbar */
-                        width: 100%;
-                        text-align: center;
-                    }
-                    .counter-text { font-size: 32px; font-weight: 800; color: #00ff9d; text-shadow: 0 0 10px rgba(0,255,157,0.3); }
                 </style>
 
                 <script>
-                    let lockpicks = 3;
+                    // Use window scope variables to avoid re-declaration errors if reloaded
+                    window.lockpicks = window.lockpicks || 3;
                     const maxLockpicks = 6;
+                    
+                    // Update UI immediately on load
+                    updateUI();
+
+                    function updateUI() {
+                        const countEl = document.getElementById('lockpick-count');
+                        if(countEl) countEl.innerText = window.lockpicks;
+                    }
                     
                     function tapCharacter() {
                         const char = document.getElementById('hero-char');
-                        
-                        // 1. Feedback Visivo (Classe CSS)
-                        char.classList.add('char-clicked');
-                        // Rimuovi la classe dopo 100ms per farlo tornare normale
-                        setTimeout(() => char.classList.remove('char-clicked'), 100);
+                        char.style.transform = "scale(0.95) translateY(5px)";
+                        setTimeout(() => char.style.transform = "scale(1) translateY(0)", 100);
 
-                        // 2. Feedback Tattile (Vibrazione)
                         if(window.Telegram.WebApp.HapticFeedback) {
                             window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
                         }
 
-                        // 3. Easter Egg: Mostra fumetto a caso
+                        // 30% chance to speak
                         if(Math.random() > 0.7) showSpeech();
                     }
 
                     function showSpeech() {
                         const bubble = document.getElementById('char-speech');
-                        const frasi = ["Mi servono grimaldelli...", "Ho visto una banca piena!", "Attento alla polizia!", "Siamo ricchi!"];
-                        bubble.innerText = frasi[Math.floor(Math.random() * frasi.length)];
+                        const phrases = [
+                            "Need more lockpicks...", 
+                            "I saw a huge bank!", 
+                            "Cops are sleeping...", 
+                            "Let's get rich!",
+                            "My bag is empty :("
+                        ];
+                        bubble.innerText = phrases[Math.floor(Math.random() * phrases.length)];
                         bubble.style.opacity = 1;
-                        setTimeout(() => bubble.style.opacity = 0, 3000);
+                        setTimeout(() => bubble.style.opacity = 0, 2500);
                     }
 
                     function claimDaily() {
-                        if(lockpicks >= maxLockpicks) return;
-                        lockpicks = Math.min(lockpicks + 3, maxLockpicks);
-                        document.getElementById('lockpick-count').innerText = lockpicks;
-                        document.getElementById('btn-daily').disabled = true;
-                        document.getElementById('btn-daily').innerText = "✅ Fatto";
-                        if(window.Telegram.WebApp.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                        if(window.lockpicks >= maxLockpicks) return;
+                        
+                        window.lockpicks = Math.min(window.lockpicks + 3, maxLockpicks);
+                        updateUI();
+                        
+                        const btn = document.getElementById('btn-daily');
+                        btn.disabled = true;
+                        btn.innerText = "✅ Claimed";
+                        btn.style.opacity = "0.6";
+                        
+                        if(window.Telegram.WebApp.HapticFeedback) 
+                            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
                     }
 
                     function watchAd() {
-                        // Qui simuli l'ad
-                        if(lockpicks < maxLockpicks) {
-                            lockpicks++;
-                            document.getElementById('lockpick-count').innerText = lockpicks;
+                        if(window.lockpicks < maxLockpicks) {
+                            window.lockpicks++;
+                            updateUI();
+                            // Optional: Alert replaced by simple feedback
+                        } else {
+                            // Shake effect or warning could go here
                         }
                     }
                 </script>
-            </div>
-
-            <div id="view-caveau" class="view">
-                <h2 class="room-title">💰 Il Caveau</h2>
-                <p style="background:rgba(0,0,0,0.5); padding:5px; border-radius:5px;">Saldo: 0 $RAC</p>
-            </div>
-
-        </div>
-
-        <div class="navbar">
-            <div class="nav-item nav-covo active" onclick="switchTab('covo')">
-                <div class="nav-icon">🏠</div>
-                <div>COVO</div>
             </div>
 
             <div class="nav-item nav-caveau" onclick="switchTab('caveau')">
@@ -365,4 +383,5 @@
     </script>
 </body>
 </html>
+
 
